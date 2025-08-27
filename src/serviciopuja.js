@@ -17,7 +17,7 @@ const upload = multer({
 
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['http://offertapp.co','http://146.190.75.181'],
   methods: ['GET','POST','PUT','DELETE','OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type','Authorization'],
   credentials: true
