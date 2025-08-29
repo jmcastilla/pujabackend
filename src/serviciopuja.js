@@ -524,6 +524,9 @@ app.patch('/api/requerimientos/:id/inactivar', verifyToken, async (req, res) => 
 
 // requerimientos
 app.get('/api/proveedores', verifyToken, async (req, res) => {
+  if (!req.user || String(req.user.tipo) !== '2') {
+    return res.status(403).json({ ok: false, error: 'No autorizado para esta lista' });
+  }
   console.log(req.user);
   const selectSql = `
     SELECT idusuarios, name, email, empresa FROM puja.usuarios
@@ -539,6 +542,28 @@ app.get('/api/proveedores', verifyToken, async (req, res) => {
     } finally { conn.release(); }
   } catch (e) {
     console.error('[api] Error /api/proveedores:', e);
+    res.status(500).json({ ok:false, error:e.message || String(e) });
+  }
+});
+
+app.get('/api/pujasactivas', verifyToken, async (req, res) => {
+  if (!req.user || String(req.user.tipo) !== '2') {
+    return res.status(403).json({ ok: false, error: 'No autorizado para esta lista' });
+  }
+  const selectSql = `
+  SELECT r.idrequerimientos, r.sku, r.ean, r.producto, r.laboratorio, r.cantidad as cantidadr, r.precio as preciop, o.cantidad as cantidado, o.precio as precioo, u.empresa FROM puja.ofertas as o
+  inner join puja.requerimientos as r on r.idrequerimientos= o.fkrequerimientos
+  inner join puja.usuarios as u on u.idusuarios= o.fkusuario
+  where r.activo=1 limit 10000
+  `;
+  try {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.query(selectSql);
+      res.json({ ok: true, rows });
+    } finally { conn.release(); }
+  } catch (e) {
+    console.error('[api] Error /api/pujasactivas:', e);
     res.status(500).json({ ok:false, error:e.message || String(e) });
   }
 });
