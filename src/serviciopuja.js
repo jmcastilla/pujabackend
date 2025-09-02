@@ -437,7 +437,7 @@ app.post('/api/pujas', verifyToken, async (req, res) => {
       INSERT INTO ofertas (fkrequerimientos, fkusuario, cantidad, precio, observaciones)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const params = [idReq, proveedorId, qty, p];
+    const params = [idReq, proveedorId, qty, p, observaciones];
 
     const [result] = await conn.query(sql, params);
     await conn.commit();
