@@ -489,6 +489,41 @@ app.get('/api/requerimientos/:id/pujas', verifyToken, async (req, res) => {
   }
 });
 
+// PATCH /api/requerimientos/inactivar
+app.patch('/api/requerimientos/inactivar', verifyToken, async (req, res) => {
+  try {
+    // Solo admin
+    if (req.user?.tipo !== 1) {
+      return res.status(403).json({ ok: false, error: 'No autorizado' });
+    }
+
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ ok: false, error: 'ids debe ser un arreglo con IDs' });
+    }
+
+    const idList = ids.map(n => parseInt(n, 10)).filter(n => Number.isInteger(n) && n > 0);
+    if (idList.length === 0) {
+      return res.status(400).json({ ok: false, error: 'IDs inválidos' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.query(
+        `UPDATE puja.requerimientos SET activo = 0 WHERE idrequerimientos IN (?)`,
+        [idList]
+      );
+      return res.json({ ok: true, affectedRows: result.affectedRows });
+    } finally {
+      conn.release();
+    }
+  } catch (e) {
+    console.error('[api] PATCH /api/requerimientos/inactivar error:', e);
+    return res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+
 // Inactivar requerimiento
 app.patch('/api/requerimientos/:id/inactivar', verifyToken, async (req, res) => {
   if (!req.user || String(req.user.tipo) !== '1') {
