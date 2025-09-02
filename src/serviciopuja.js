@@ -382,12 +382,13 @@ app.post('/api/pujas', verifyToken, async (req, res) => {
     return res.status(403).json({ ok: false, error: 'No autorizado para pujar' });
   }
 
-  const { idrequerimientos, cantidad, precio } = req.body || {};
+  const { idrequerimientos, cantidad, precio, observaciones } = req.body || {};
 
   // Validaciones básicas
   const idReq = parseInt(idrequerimientos, 10);
   const qty = parseInt(cantidad, 10);
   const p = Number(precio);
+  const obs = observaciones;
 
   if (!Number.isInteger(idReq) || idReq <= 0) {
     return res.status(400).json({ ok: false, error: 'idrequerimientos inválido' });
@@ -433,8 +434,8 @@ app.post('/api/pujas', verifyToken, async (req, res) => {
 
     // 2) Insertar o actualizar puja del mismo proveedor para el mismo requerimiento
     const sql = `
-      INSERT INTO ofertas (fkrequerimientos, fkusuario, cantidad, precio)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO ofertas (fkrequerimientos, fkusuario, cantidad, precio, observaciones)
+      VALUES (?, ?, ?, ?, ?)
     `;
     const params = [idReq, proveedorId, qty, p];
 
@@ -545,9 +546,9 @@ app.get('/api/proveedores', verifyToken, async (req, res) => {
 });
 
 app.get('/api/pujasactivas', verifyToken, async (req, res) => {
-  
+
   const selectSql = `
-  SELECT r.idrequerimientos, r.sku, r.ean, r.producto, r.laboratorio, r.cantidad as cantidadr, r.precio as preciop, o.cantidad as cantidado, o.precio as precioo, u.empresa FROM puja.ofertas as o
+  SELECT r.idrequerimientos, r.sku, r.ean, r.producto, r.laboratorio, r.cantidad as cantidadr, r.precio as preciop, o.cantidad as cantidado, o.precio as precioo, u.empresa, o.observaciones FROM puja.ofertas as o
   inner join puja.requerimientos as r on r.idrequerimientos= o.fkrequerimientos
   inner join puja.usuarios as u on u.idusuarios= o.fkusuario
   where r.activo=1 limit 10000
